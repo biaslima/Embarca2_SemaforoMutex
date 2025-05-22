@@ -1,4 +1,4 @@
-#include "buzzer.h"
+#include "perifericos.h"
 
 static int buzzer_pin;
 static uint slice_num;
@@ -39,4 +39,21 @@ void tocar_frequencia(int frequencia, int duracao_ms) {
 void buzzer_desliga(int pin){
     pwm_set_enabled(slice_num, false);
     gpio_put(pin, 0);
+}
+
+void atualizaLedRGB(uint LED_VERMELHO, uint LED_VERDE, uint LED_AZUL, uint16_t usuariosAtivos, uint maxUsuarios) {
+    gpio_put(LED_VERMELHO, 0);
+    gpio_put(LED_VERDE, 0);
+    gpio_put(LED_AZUL, 0);
+
+    if (usuariosAtivos == 0) {
+        gpio_put(LED_AZUL, 1); 
+    } else if (usuariosAtivos < maxUsuarios - 1) {
+        gpio_put(LED_VERDE, 1); 
+    } else if (usuariosAtivos == maxUsuarios - 1) {
+        gpio_put(LED_VERMELHO, 1);
+        gpio_put(LED_VERDE, 1); 
+    } else if (usuariosAtivos == maxUsuarios) {
+        gpio_put(LED_VERMELHO, 1); 
+    }
 }
