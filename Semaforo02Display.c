@@ -28,13 +28,15 @@ ssd1306_t ssd;
 #define maxUsuarios 10
 uint16_t usuariosAtivos = 0;
 
+char bufferUsuarios[32];
+char bufferVagas[32];
+
 SemaphoreHandle_t xSemaphoreUsuarios;
 SemaphoreHandle_t xDisplayMutex;
 SemaphoreHandle_t xSemaphoreReset;
 
 void exibirTelaPadrao() {
-    char bufferUsuarios[32];
-    char bufferVagas[32];
+    
     sprintf(bufferUsuarios, "Usuarios: %d", usuariosAtivos);
     sprintf(bufferVagas, "Vagas: %d", (maxUsuarios - usuariosAtivos));
 
@@ -61,8 +63,8 @@ void vEntradaTask(void *params) {
 
                     if (xSemaphoreTake(xDisplayMutex, portMAX_DELAY) == pdTRUE) {
                         ssd1306_fill(&ssd, 0);
-                        ssd1306_draw_string(&ssd, "Entrada", 36, 10);
-                        ssd1306_draw_string(&ssd, "OK!", 50, 19);
+                        ssd1306_draw_string(&ssd, "Entrada", 36, 25);
+                        ssd1306_draw_string(&ssd, "OK!", 50, 34);
                         ssd1306_send_data(&ssd);
                         vTaskDelay(pdMS_TO_TICKS(500));
                         xSemaphoreGive(xDisplayMutex);
@@ -97,8 +99,8 @@ void vSaidaTask(void *params) {
 
                     if (xSemaphoreTake(xDisplayMutex, portMAX_DELAY) == pdTRUE) {
                         ssd1306_fill(&ssd, 0);
-                        ssd1306_draw_string(&ssd, "Saida", 44, 56);
-                        ssd1306_draw_string(&ssd, "OK!", 48, 65);
+                        ssd1306_draw_string(&ssd, "Saida", 44, 25 );
+                        ssd1306_draw_string(&ssd, "OK!", 50, 34);
                         ssd1306_send_data(&ssd);
                         vTaskDelay(pdMS_TO_TICKS(500));
                         xSemaphoreGive(xDisplayMutex);
@@ -123,6 +125,11 @@ void vSaidaTask(void *params) {
 void vResetTask(void *params) {
     while (true) {
         if (xSemaphoreTake(xSemaphoreReset, portMAX_DELAY) == pdTRUE) {
+            // Limpa qualquer outro sinal de reset pendente (debounce)
+            while (xSemaphoreTake(xSemaphoreReset, pdMS_TO_TICKS(50)) == pdTRUE) {
+                // Apenas consome os semáforos extras
+            }
+            
             while (usuariosAtivos > 0) {
                 xSemaphoreGive(xSemaphoreUsuarios);
                 usuariosAtivos--;
@@ -141,8 +148,12 @@ void vResetTask(void *params) {
                 ssd1306_send_data(&ssd);
                 xSemaphoreGive(xDisplayMutex);
             }
+            
 
+            vTaskDelay(pdMS_TO_TICKS(1500));
             exibirTelaPadrao();
+            
+            vTaskDelay(pdMS_TO_TICKS(500));
         }
     }
 }
@@ -190,6 +201,7 @@ int main() {
     xTaskCreate(vResetTask, "ResetTask", configMINIMAL_STACK_SIZE + 128, NULL, 1, NULL);
 
     exibirTelaPadrao();
+    atualizaLedRGB(LED_VERMELHO, LED_VERDE, LED_AZUL, usuariosAtivos, maxUsuarios);
 
     vTaskStartScheduler();
     panic_unsupported();
