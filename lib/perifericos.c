@@ -41,6 +41,7 @@ void buzzer_desliga(int pin){
     gpio_put(pin, 0);
 }
 
+//Atualiza LED de acordo com usuários
 void atualizaLedRGB(uint LED_VERMELHO, uint LED_VERDE, uint LED_AZUL, uint16_t usuariosAtivos, uint maxUsuarios) {
     gpio_put(LED_VERMELHO, 0);
     gpio_put(LED_VERDE, 0);
