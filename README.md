@@ -1,30 +1,32 @@
-Utilização do FreeRTOS
+# Painel de Controle Interativo com Acesso Concorrente
 
-Exemplo semáforo de Contagem com Display OLED.
+Este projeto simula um sistema de controle de entrada e saída em um laboratorio com capacidade limitada, utilizando FreeRTOS e a placa BitDogLab com RP2040.
 
-Este programa exemplifica o uso de um semáforo de contagem (counting semaphore) no FreeRTOS, aplicado na placa BitDogLab. O sistema também utiliza um display OLED SSD1306 via I2C para exibir mensagens ao usuário.
+## 🧠 Funcionalidades
 
-Objetivo
-Registrar e processar múltiplos eventos gerados pelo botão A (GPIO 5).
-Cada vez que o botão é pressionado, o programa contabiliza o evento e atualiza o display com o total de eventos processados, mesmo que várias pressões ocorram em sequência rápida.
+- Controle de acesso com semáforo de contagem
+- Reset do sistema via interrupção e semáforo binário
+- Proteção do display com mutex
+- Feedback visual com display OLED
+- LED RGB indicando ocupação atual
+- Sinalização sonora com buzzer
+- Interface via botões físicos
 
-O Display OLED SSD1306: exibe mensagens e o número de eventos.
+## ⚙️ Componentes utilizados
 
-Semáforo de contagem: controla a fila de eventos aguardando processamento.
+- BitDogLab com RP2040
+- Display OLED via I2C (SSD1306)
+- LED RGB (3 GPIOs)
+- Buzzer (PWM)
+- Botões A, B e JOYSTICK (GPIO)
 
-Tarefa única (vContadorTask): consome os eventos e atualiza o display.
+## 📦 Estrutura do código
 
-Funcionamento do Programa:
-O sistema inicializa e exibe: "Aguardando evento..." no display.
-Quando o botão A (GPIO 5) é pressionado a ISR é acionada.
-O semáforo de contagem é incrementado com xSemaphoreGiveFromISR().
-O semáforo pode acumular vários eventos consecutivos (até o limite definido, nete caso 10).
+- `LabGateControl.c`: lógica principal e multitarefas
+- `perifericos.c/h`: funções auxiliares (buzzer, LED RGB)
+- `ssd1306.c/h`: biblioteca do display
+- `FreeRTOS`: gerenciamento das tarefas
 
-A tarefa vContadorTask fica bloqueada em xSemaphoreTake(...) até que um evento esteja disponível.
+## 👩‍💻 Autora
 
-Ao receber o semáforo, incrementa a variável eventosProcessados. Exibe no display Evento recebido! Eventos: N
-Aguarda 1.5 segundos simulando tempo de processamento.
-
-Retorna à mensagem "Aguardando evento...".
-
-Neste exemplo, o semáforo de contagem captura todos os pulsos, inclusive os gerados por bounce mecânico do botão A. Isso evidencia o efeito do rebote e mostra a importância de implementar algum tipo de tratamento. 
+Anna Beatriz Silva Lima — [Residência EmbarcaTech 2025]
